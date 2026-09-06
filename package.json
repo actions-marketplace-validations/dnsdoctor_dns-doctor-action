@@ -1,0 +1,12 @@
+{
+  "name": "dns-doctor-action",
+  "private": true,
+  "version": "0.1.0",
+  "description": "GitHub Action: scan a domain's email-authentication posture or wait for a DNS change to propagate, via the dns-doctor CLI.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/run.test.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "license": "Apache-2.0"
+}

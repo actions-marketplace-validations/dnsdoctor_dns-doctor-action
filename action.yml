@@ -1,0 +1,71 @@
+name: "DNS Doctor Check"
+description: "Scan a domain's SPF, DMARC, DKIM, MX, DNS and expiry posture in CI, or wait until a DNS change has propagated worldwide."
+author: "DNS Doctor"
+branding:
+  icon: "shield"
+  color: "green"
+
+inputs:
+  domain:
+    description: "The domain (scan mode) or DNS name (propagation mode) to check."
+    required: true
+  mode:
+    description: "scan (default) runs the full report; propagation polls six locations until the record is consistent everywhere."
+    required: false
+    default: "scan"
+  fail-on:
+    description: "Scan mode: fail the job when any check is at least this severe. One of fail, warn, never."
+    required: false
+    default: "fail"
+  record-type:
+    description: "Propagation mode: the record type to read (A, AAAA, CNAME, MX, TXT, NS ...)."
+    required: false
+    default: "A"
+  expected:
+    description: "Propagation mode: the value every location must answer with. Omit to wait for consistency only."
+    required: false
+    default: ""
+  timeout-minutes:
+    description: "Propagation mode: give up after this many minutes."
+    required: false
+    default: "30"
+  interval-seconds:
+    description: "Propagation mode: seconds between polls."
+    required: false
+    default: "60"
+  api-token:
+    description: "Optional DNS Doctor API token (raises the anonymous rate limit). Never required."
+    required: false
+    default: ""
+  cli-version:
+    description: "The dns-doctor npm CLI version to run."
+    required: false
+    default: "0.2.1"
+
+outputs:
+  status:
+    description: "Scan mode: pass, warn or fail. Propagation mode: the final verdict (propagated, partial, not_propagated, inconsistent, unknown)."
+    value: ${{ steps.run.outputs.status }}
+  failing-checks:
+    description: "Scan mode: comma-separated names of the checks that failed."
+    value: ${{ steps.run.outputs.failing-checks }}
+  report-path:
+    description: "Path of the JSON the CLI returned, relayed verbatim."
+    value: ${{ steps.run.outputs.report-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: run
+      shell: bash
+      env:
+        DNSD_DOMAIN: ${{ inputs.domain }}
+        DNSD_MODE: ${{ inputs.mode }}
+        DNSD_FAIL_ON: ${{ inputs.fail-on }}
+        DNSD_RECORD_TYPE: ${{ inputs.record-type }}
+        DNSD_EXPECTED: ${{ inputs.expected }}
+        DNSD_TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+        DNSD_INTERVAL_SECONDS: ${{ inputs.interval-seconds }}
+        DNSD_CLI_VERSION: ${{ inputs.cli-version }}
+        DNSDOCTOR_API_TOKEN: ${{ inputs.api-token }}
+      run: node "${{ github.action_path }}/run.mjs"
